@@ -1,0 +1,18 @@
+{
+  "name": "miks-desktop",
+  "private": true,
+  "version": "1.0.5",
+  "scripts": {
+    "build": "tsc",
+    "android:prepare": "npm run build && npx tauri icon icons/miks-logo.svg && node scripts/prepare-mobile.mjs",
+    "android:init": "tauri android init --ci --skip-targets-install",
+    "android:build": "npm run android:prepare && tauri android build --apk --debug --target aarch64",
+    "desktop:prepare": "npm run build && npx tauri icon icons/miks-logo.svg && node scripts/generate-tauri-icon.mjs && node scripts/prepare-desktop.mjs",
+    "desktop:build": "npm run desktop:prepare && tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2"
+  }
+}

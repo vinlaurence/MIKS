@@ -1,0 +1,9 @@
+[build]
+  command = "bash scripts/netlify-android-build.sh"
+  publish = "installer"
+
+[[headers]]
+  for = "/miks.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Cache-Control = "public, max-age=300"

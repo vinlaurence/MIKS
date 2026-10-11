@@ -1,0 +1,363 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#210a0a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="miks">
+<title>miks — mood-based music</title>
+<script src="theme-init.js"></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="icons/miks-logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css?v=login-glass-loop-20261003">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ LOGIN ============ -->
+  <section id="screen-login" class="screen visible">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <svg class="login-wave" viewBox="0 0 1200 900" preserveAspectRatio="none" aria-hidden="true">
+      <defs><path id="login-wave-route" pathLength="1" d="M1120 820 C990 820 900 750 960 655 C1030 545 1135 515 1040 435 C945 355 790 420 780 530 C770 635 930 650 845 725 C760 800 645 690 655 560 C666 430 810 350 760 265 C705 172 560 170 500 260 C432 360 560 430 530 520 C500 610 370 622 345 530 C320 438 475 367 413 285 C351 203 220 203 160 265 C100 328 175 394 260 398 C345 402 361 300 292 245 C220 190 115 160 65 92 C260 140 470 352 520 540 C565 705 640 843 815 842 C934 841 1180 820 1120 820 Z"/></defs>
+      <use href="#login-wave-route" class="login-wave-base"/>
+      <use href="#login-wave-route" class="login-wave-runner-glow"/>
+      <use href="#login-wave-route" class="login-wave-runner-streak"/>
+    </svg>
+    <button type="button" class="login-theme-toggle" id="login-theme-toggle" aria-label="Switch to light mode" title="Switch to light mode"><span id="login-theme-icon" aria-hidden="true">☀</span></button>
+    <div class="login-body">
+      <div class="mark"><img src="data:image/png;base64,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" alt="miks logo"></div>
+      <div class="logo-serif">miks</div>
+      <div class="login-tagline">Music for every mood</div>
+
+      <div class="field-group login-card" style="width:100%;margin-top:6px;">
+        <div class="auth-card-heading" id="auth-card-heading">Welcome back</div>
+        <div class="auth-card-subtitle" id="auth-card-subtitle">Log in to save the music you love.</div>
+        <div class="field-label">Email</div>
+        <input type="email" class="field" id="login-email" placeholder="you@email.com">
+        <div class="field-label">Password</div>
+        <div class="password-wrap">
+          <input type="password" class="field" id="login-password" placeholder="••••••••">
+          <button type="button" class="show-password" id="btn-toggle-password">Show</button>
+        </div>
+        <button type="button" class="auth-reset" id="btn-password-reset">Forgot password?</button>
+        <div class="auth-error" id="auth-error"></div>
+        <button class="btn-primary" id="btn-login">Log in</button>
+        <div class="auth-divider"><span>or</span></div>
+        <button type="button" class="btn-google" id="btn-google-signin">
+          <svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.4-4.55H24v9.02h12.93c-.58 2.96-2.26 5.48-4.73 7.18l7.6 5.9c4.43-4.08 7.18-10.08 7.18-17.55Z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.2a23.9 23.9 0 0 0 0 21.58l7.98-6.2Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.9l-7.6-5.9c-2.11 1.42-4.82 2.27-8.3 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.2C6.51 42.62 14.62 48 24 48Z"/></svg>
+          <span>Continue with Google</span>
+        </button>
+        <button class="btn-guest" id="btn-continue-guest" type="button">Try Miks as a guest</button>
+        <div class="auth-toggle" id="auth-mode-toggle">New here? Create an account</div>
+        <div class="login-hint" id="firebase-hint" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section id="screen-home" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="top-bar">
+      <div class="brand"><img src="data:image/png;base64,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" alt=""><span class="brand-name">miks</span></div>
+      <div class="top-actions">
+        <button type="button" class="icon-btn logout-btn" id="btn-logout" title="Log out" aria-label="Log out" style="display:none;">↪</button>
+        <button type="button" class="icon-btn" id="btn-go-settings" title="Settings" aria-label="Settings">⚙</button>
+        <button type="button" class="icon-btn" id="btn-go-mood" title="Mood AI" aria-label="Mood AI">✦</button>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="week-strip" id="week-strip"></div>
+      <section class="day-listening" id="day-listening" aria-live="polite" hidden>
+        <div class="day-listening-head">
+          <div><h2 id="day-listening-title"></h2><span id="day-listening-count"></span></div>
+          <button type="button" id="btn-close-day-list" aria-label="Close day details">×</button>
+        </div>
+        <div class="day-listening-tracks" id="day-listening-tracks"></div>
+      </section>
+
+      <div class="home-welcome"><div class="mood-eyebrow">Your soundtrack, your moment</div><h1 id="home-greeting">Good evening</h1><p>Find a song that meets you where you are.</p></div>
+
+      <div class="home-mood-entry">
+        <span>How are you feeling?</span><small>Music that matches how you feel.</small>
+        <div class="home-mood-form"><input id="home-mood-text" placeholder="nostalgic, peaceful and a little lonely"><button id="btn-home-mood" type="button">Create my mix</button></div>
+      </div>
+      <div class="home-quick-moods" id="home-quick-moods"></div>
+
+      <div class="section-label"><span>For You</span><button type="button" class="refresh" id="btn-play-for-you">Play Mix</button></div>
+      <p class="home-row-note" id="home-for-you-note"></p>
+      <div class="art-row" id="home-for-you-row"></div>
+
+      <div class="section-label"><span>Trending Christian Music</span><span class="refresh" id="btn-refresh-trending">refresh</span></div>
+      <div class="art-row" id="trending-row"></div>
+
+      <div class="section-label"><span>Based on your favorites</span><button type="button" class="refresh" data-route="favorites">View all</button></div>
+      <div class="art-row" id="home-favorites-row"></div>
+
+      <div class="section-label"><span>Recently played</span><button type="button" class="refresh" data-route="profile">View all</button></div>
+      <div class="art-row" id="home-recent-row"></div>
+
+      <div class="pill-row">
+        <div class="pill heart" id="pill-mood"><span class="icon">♥</span><span class="pill-cap">Mood AI</span></div>
+        <div class="pill" id="pill-favorites"><span class="icon">♡</span><span class="pill-cap">Favorites</span></div>
+        <div class="pill" id="pill-create-playlist"><span class="icon">＋</span><span class="pill-cap">Create playlist</span></div>
+      </div>
+
+      <div class="empty-note" id="key-notice" style="display:none;">
+        Christian music is temporarily unavailable. Try again in a moment.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DISCOVER / SEARCH ============ -->
+  <section id="screen-discover" class="screen">
+    <div class="bg-art"></div><div class="bg-shade"></div>
+    <div class="settings-head"><div><div class="mood-eyebrow">Explore the catalog</div><div class="settings-title">Discover</div></div></div>
+    <div class="discover-scroll">
+      <form class="search-box" id="search-form"><input id="search-input" type="search" placeholder="Search songs, artists, or a feeling" autocomplete="off"><button type="submit" aria-label="Search">→</button></form>
+      <div class="section-label"><span>Browse by mood</span></div>
+      <div class="discover-tags" id="discover-tags"></div>
+      <div class="section-label"><span id="search-results-title">Find something new</span></div>
+      <div class="queue-list discover-results" id="search-results"><div class="empty-note">Search Christian-tagged Jamendo tracks, or choose a mood to start listening.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ MOOD AI ============ -->
+  <section id="screen-mood" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="mood-head">
+      <div class="mood-eyebrow">Miks AI</div>
+      <div class="mood-title">What's the mood today?</div>
+    </div>
+    <div class="chip-row" id="chip-row"></div>
+    <div class="mood-or">Describe what you need from the music. When you’re signed in, Miks sends your description to OpenAI to map it to music tags.</div>
+    <div class="mood-input-row">
+      <input class="mood-input" id="mood-text" placeholder="feeling restless, need momentum...">
+      <button class="mood-go" id="btn-mood-go">→</button>
+    </div>
+    <div class="mood-status" id="mood-status"></div>
+  </section>
+
+  <!-- ============ PLAYLIST / NOW PLAYING ============ -->
+  <section id="screen-playlist" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="playlist-head">
+      <div>
+        <div class="playlist-library-label" id="playlist-library-label">Playlist</div>
+        <div class="playlist-library-title" id="playlist-library-title">Choose a playlist</div>
+      </div>
+      <div class="playlist-library-mark">♫</div>
+    </div>
+    <div class="playlist-hero">
+      <div class="cover-art" id="hero-cover"></div>
+      <div>
+      <div class="playlist-kicker">Your playlist</div>
+        <div class="play-title" id="hero-title">Nothing playing yet</div>
+        <div class="play-sub" id="hero-sub">—</div>
+      </div>
+      <button class="big-play" id="btn-hero-play">▶</button>
+      <div class="playlist-actions">
+      <button class="save-playlist" id="btn-create-playlist">＋ Save this queue</button>
+      <button class="save-playlist" id="btn-add-current-track">＋ Add current song</button>
+      </div>
+    </div>
+    <div class="playlist-section-bar">
+      <div class="playlist-section-title">Your library</div>
+      <button type="button" class="playlist-new ai-enhance-btn" id="btn-ai-enhance" title="AI uses playlist track titles and artists to find similar Christian music">✦ AI Enhance</button>
+      <button type="button" class="playlist-new" id="btn-new-playlist">＋ New</button>
+    </div>
+    <div class="library-tools">
+      <input id="library-search" type="search" placeholder="Find a playlist" aria-label="Find a playlist">
+      <select id="library-sort" aria-label="Sort playlists"><option value="recent">Recently added</option><option value="name">Title</option><option value="tracks">Most songs</option></select>
+    </div>
+    <div class="saved-playlists" id="saved-playlists"></div>
+    <div class="ai-suggestions" id="ai-suggestions" hidden></div>
+    <div class="playlist-section-title queue-heading"><span id="queue-heading-title">Tracks</span><span id="queue-count"></span></div>
+    <div class="queue-tools"><span>Up next</span><button type="button" class="playlist-new" id="btn-clear-queue">Clear queue</button></div>
+    <div class="queue-list" id="queue-list"></div>
+  </section>
+
+  <section id="screen-now-playing" class="screen">
+    <div class="bg-art"></div><div class="bg-shade"></div>
+    <div class="now-playing-head"><button type="button" class="icon-btn" id="btn-now-playing-back" aria-label="Back">←</button><span>NOW PLAYING</span><span class="now-playing-context" id="now-playing-context">miks mix</span></div>
+    <div class="now-playing-body">
+      <div class="now-playing-cover" id="now-playing-cover"></div>
+      <div class="now-playing-track"><div><h1 id="now-playing-title">Nothing playing</h1><p id="now-playing-artist">Choose a song to get started</p></div><button type="button" id="btn-now-playing-fav" aria-label="Add to favorites">♡</button></div>
+      <div class="now-playing-progress"><input type="range" id="now-playing-seek" min="0" max="100" value="0" aria-label="Seek through song"><div><span id="now-playing-current-time">0:00</span><span id="now-playing-duration">0:00</span></div></div>
+      <div class="now-playing-controls"><button type="button" id="btn-now-playing-shuffle" aria-label="Shuffle">⇄</button><button type="button" id="btn-now-playing-prev" aria-label="Previous track">⏮</button><button type="button" class="now-playing-play" id="btn-now-playing-play" aria-label="Play">▶</button><button type="button" id="btn-now-playing-next" aria-label="Next track">⏭</button><button type="button" id="btn-now-playing-repeat" aria-label="Repeat">↻</button></div>
+      <div class="now-playing-volume">Volume <input type="range" id="now-playing-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume"></div>
+    </div>
+  </section>
+
+  <!-- ============ FAVORITES ============ -->
+  <section id="screen-favorites" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="settings-head" style="padding-top:10px;"><div class="settings-title" style="font-size:24px;">Favorites</div></div>
+    <div class="queue-list" id="favorites-list"></div>
+  </section>
+
+  <!-- ============ PROFILE / HISTORY ============ -->
+  <section id="screen-profile" class="screen">
+    <div class="bg-art"></div><div class="bg-shade"></div>
+    <div class="settings-head" style="padding-top:10px;"><div><div class="mood-eyebrow">Your listening</div><div class="settings-title" id="profile-title">Profile</div></div></div>
+    <div class="profile-scroll">
+      <div class="profile-summary" id="profile-summary">Sign in to save your music and build your taste profile.</div>
+      <section class="taste-dashboard" aria-labelledby="taste-title">
+        <div class="section-label"><span id="taste-title">Your taste profile</span></div>
+        <div class="taste-charts" id="taste-charts"></div>
+        <div class="weekly-report-card">
+          <div><strong>Weekly listening reflection</strong><small>A personal summary of your recent music patterns.</small></div>
+          <button type="button" class="playlist-new" id="btn-weekly-report">Generate</button>
+        </div>
+        <div class="weekly-report" id="weekly-report" aria-live="polite"></div>
+      </section>
+      <div class="section-label"><span>Recently played</span><button class="refresh" id="btn-clear-history" type="button">Clear</button></div>
+      <div class="queue-list profile-history" id="history-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="settings-head">
+      <button type="button" class="icon-btn" id="btn-settings-back" title="Back to Home" aria-label="Back to Home">←</button>
+      <div class="settings-title">Settings</div>
+    </div>
+    <div class="settings-scroll">
+
+      <div>
+        <div class="settings-group-label">Music source</div>
+        <div class="settings-card">
+          <div class="settings-input-wrap">
+            <div class="field-label" style="margin-bottom:6px;">Christian music on Jamendo</div>
+            <div class="settings-save-note">Discovery and mood searches are filtered to tracks tagged Christian on Jamendo.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="settings-group-label">Account</div>
+        <div class="settings-card">
+          <div class="settings-row" id="account-status-row"><span class="row-icon">◉</span><span id="account-status-text">Not signed in</span></div>
+          <button type="button" class="settings-row logout-row" id="logout-row" style="display:none;"><span class="row-icon">⇥</span>Log out</button>
+        </div>
+        <div style="font-size:9px;color:var(--cream-dim);margin-top:8px;line-height:1.5;" id="firebase-status"></div>
+      </div>
+
+      <div>
+        <div class="settings-group-label">Playback</div>
+        <div class="settings-card">
+          <div class="settings-row"><span class="row-icon">♫</span>High audio quality
+            <div class="toggle on" id="toggle-quality"><div class="toggle-knob"></div></div>
+          </div>
+          <div class="settings-row"><span class="row-icon">◌</span>Notifications
+            <div class="toggle" id="toggle-notif"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="settings-group-label">Appearance</div>
+        <div class="settings-card appearance-card">
+          <div class="appearance-setting-label">Color mode</div>
+          <div class="theme-mode-options" id="theme-mode-options" role="group" aria-label="Color mode">
+            <button type="button" data-theme-mode="light">Light</button>
+            <button type="button" data-theme-mode="dark">Dark</button>
+          </div>
+          <div class="appearance-setting-label palette-label">Color combination</div>
+          <div class="palette-options" id="palette-options" role="group" aria-label="Color combination"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="settings-group-label">Miks app</div>
+        <div class="settings-card">
+          <button type="button" class="settings-row install-row" id="btn-install-app"><span class="row-icon">⬇</span><span><strong id="install-app-label">Download Miks app</strong><small id="install-app-note">Install Miks on this phone for quick access.</small></span><span class="install-arrow">›</span></button>
+        </div>
+      </div>
+
+      <div>
+        <div class="settings-group-label">About</div>
+        <div class="settings-card">
+          <div class="settings-row"><span class="row-icon">ⓘ</span>Version 2.0 · Web</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ ADMIN DASHBOARD ============ -->
+  <section id="screen-admin" class="screen">
+    <div class="bg-art"></div>
+    <div class="bg-shade"></div>
+    <div class="admin-head">
+      <button type="button" class="icon-btn" id="btn-admin-back" aria-label="Back to Home">←</button>
+      <div><div class="mood-eyebrow">Private area</div><div class="settings-title">Admin dashboard</div></div>
+    </div>
+    <div class="admin-scroll">
+      <div class="admin-welcome">Overview of registered MIKS users.</div>
+      <div class="admin-stats">
+        <div class="admin-stat"><span>Total sign-ups</span><strong id="admin-user-count">—</strong></div>
+        <div class="admin-stat"><span>Joined in last 30 days</span><strong id="admin-visit-count">—</strong></div>
+      </div>
+      <div class="section-label admin-label"><span>Signed-up users</span><button class="refresh" id="btn-admin-refresh">Refresh</button></div>
+      <input type="search" class="admin-user-search" id="admin-user-search" placeholder="Search users by email" aria-label="Search users by email">
+      <div class="admin-activity" id="admin-activity"><div class="empty-note">Loading users…</div></div>
+    </div>
+  </section>
+
+  <!-- ============ MINI PLAYER (persistent) ============ -->
+  <div class="mini-player" id="mini-player">
+    <div class="progress" id="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="player-row">
+      <div class="player-art" id="mini-art"></div>
+      <div class="player-meta" id="mini-meta-click">
+        <div class="player-title" id="mini-title">—</div>
+        <div class="player-sub" id="mini-sub">—</div>
+      </div>
+      <div class="transport">
+        <button type="button" class="mini-fav" id="mini-fav" aria-label="Add current track to favorites">♡</button>
+        <button class="player-mode" id="btn-shuffle" title="Shuffle" aria-label="Shuffle">⇄</button>
+        <button type="button" class="player-mode" id="btn-prev" aria-label="Previous track">⏮</button>
+        <button type="button" class="play-btn-mini" id="btn-play-pause" aria-label="Play">▶</button>
+        <button type="button" class="player-mode" id="btn-next" aria-label="Next track">⏭</button>
+        <button class="player-mode" id="btn-repeat" title="Repeat" aria-label="Repeat">↻</button>
+        <button class="player-mode queue-open" id="btn-open-queue" title="Open queue" aria-label="Open queue">☷</button>
+      </div>
+    </div>
+    <label class="volume-control" title="Volume">◖ <input type="range" id="volume-control" min="0" max="1" step="0.05" value="1" aria-label="Volume"></label>
+  </div>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div class="bottom-nav" id="bottom-nav" style="display:none;">
+    <button type="button" class="sidebar-collapse" id="btn-sidebar-collapse" aria-label="Collapse sidebar" title="Collapse sidebar">&lt;&lt;</button>
+    <div class="sidebar-brand"><img src="icons/miks-logo.svg" alt=""><span>miks</span></div>
+    <div class="sidebar-caption">Your space</div>
+    <button class="nav-btn active" data-route="home" title="Home"><span class="nav-icon">⌂</span><span class="nav-label">Home</span></button>
+    <button class="nav-btn" data-route="discover" title="Discover"><span class="nav-icon">⌕</span><span class="nav-label">Discover</span></button>
+    <button class="nav-btn" data-route="mood" title="Mood AI"><span class="nav-icon">✦</span><span class="nav-label">Mood AI</span></button>
+    <button class="nav-btn" data-route="playlist" title="Library"><span class="nav-icon">▦</span><span class="nav-label">Library</span></button>
+    <button class="nav-btn" data-route="favorites" title="Favorites"><span class="nav-icon">♡</span><span class="nav-label">Favorites</span></button>
+    <button class="nav-btn admin-nav" id="btn-admin" data-route="admin" title="Admin" style="display:none;"><span class="nav-icon">◈</span><span class="nav-label">Admin</span></button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <audio id="audio-el" preload="none"></audio>
+</div>
+
+<script src="dist/app.js?v=miks-logo-foreground-20261003" type="module"></script>
+</body>
+</html>
