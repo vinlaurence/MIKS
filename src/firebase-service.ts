@@ -8,6 +8,7 @@ let db: any = null;
 let appInstance: any = null;
 let firebase: any = null;
 let firebaseLoad: Promise<void> | null = null;
+let googleSignInAttempt: Promise<{ ok: boolean; error?: string }> | null = null;
 
 async function loadFirebase(): Promise<void> {
   if (!isFirebaseConfigured || auth) return;
@@ -95,7 +96,17 @@ export async function signIn(email: string, password: string): Promise<{ ok: boo
   }
 }
 
-export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string }> {
+export function signInWithGoogle(): Promise<{ ok: boolean; error?: string }> {
+  if (googleSignInAttempt) return googleSignInAttempt;
+  const attempt = performGoogleSignIn();
+  const trackedAttempt = attempt.finally(() => {
+    if (googleSignInAttempt === trackedAttempt) googleSignInAttempt = null;
+  });
+  googleSignInAttempt = trackedAttempt;
+  return trackedAttempt;
+}
+
+async function performGoogleSignIn(): Promise<{ ok: boolean; error?: string }> {
   if (!isFirebaseConfigured) return { ok: false, error: "Firebase isn't configured yet." };
   try {
     await loadFirebase();
@@ -106,6 +117,7 @@ export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string 
   } catch (e: any) {
     const code = String(e?.code || "");
     if (code.includes("popup-closed-by-user")) return { ok: false, error: "Google sign-in was cancelled." };
+    if (code.includes("cancelled-popup-request")) return { ok: false, error: "A Google sign-in is already in progress. Close the other sign-in window, then try again." };
     if (code.includes("popup-blocked")) return { ok: false, error: "Your browser blocked the Google sign-in window. Allow pop-ups and try again." };
     if (code.includes("operation-not-allowed")) return { ok: false, error: "Google sign-in is disabled in Firebase. Enable the Google provider in Firebase Console → Authentication → Sign-in method." };
     if (code.includes("unauthorized-domain")) return { ok: false, error: `This app domain (${location.hostname}) isn’t authorized for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.` };

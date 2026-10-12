@@ -1,4 +1,4 @@
-const CACHE_NAME = "miks-shell-v48";
+const CACHE_NAME = "miks-shell-v49";
 const APP_SHELL = [
   "/",
   "/index.html",

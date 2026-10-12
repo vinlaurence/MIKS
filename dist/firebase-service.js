@@ -7,6 +7,7 @@ let db = null;
 let appInstance = null;
 let firebase = null;
 let firebaseLoad = null;
+let googleSignInAttempt = null;
 async function loadFirebase() {
     if (!isFirebaseConfigured || auth)
         return;
@@ -95,7 +96,18 @@ export async function signIn(email, password) {
         return { ok: false, error: friendlyAuthError(e) };
     }
 }
-export async function signInWithGoogle() {
+export function signInWithGoogle() {
+    if (googleSignInAttempt)
+        return googleSignInAttempt;
+    const attempt = performGoogleSignIn();
+    const trackedAttempt = attempt.finally(() => {
+        if (googleSignInAttempt === trackedAttempt)
+            googleSignInAttempt = null;
+    });
+    googleSignInAttempt = trackedAttempt;
+    return trackedAttempt;
+}
+async function performGoogleSignIn() {
     if (!isFirebaseConfigured)
         return { ok: false, error: "Firebase isn't configured yet." };
     try {
@@ -109,6 +121,8 @@ export async function signInWithGoogle() {
         const code = String(e?.code || "");
         if (code.includes("popup-closed-by-user"))
             return { ok: false, error: "Google sign-in was cancelled." };
+        if (code.includes("cancelled-popup-request"))
+            return { ok: false, error: "A Google sign-in is already in progress. Close the other sign-in window, then try again." };
         if (code.includes("popup-blocked"))
             return { ok: false, error: "Your browser blocked the Google sign-in window. Allow pop-ups and try again." };
         if (code.includes("operation-not-allowed"))
