@@ -2144,9 +2144,14 @@ function wireStatic(): void {
     if (track) handleToggleFavorite(track);
   });
   $("btn-remove-current").addEventListener("click", () => {
-    if (state.currentIndex < 0) return;
-    removeQueueTrack(state.currentIndex);
-    showToast("Removed from queue");
+    activeAudioTrack = null;
+    state.currentIndex = -1;
+    state.isPlaying = false;
+    audioEl.pause();
+    audioEl.removeAttribute("src");
+    audioEl.load();
+    refreshPlayerViews();
+    showToast("Player closed");
   });
   $("search-form").addEventListener("submit", async (e) => {
     e.preventDefault();
