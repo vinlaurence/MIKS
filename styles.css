@@ -265,6 +265,14 @@ html[data-effective-mode="light"] .chip:not(.active){background:var(--light-surf
 .logout-row{width:100%;background:transparent;border:0;color:var(--cream);font-family:'Manrope',sans-serif;text-align:left;cursor:pointer;}
 .install-row{width:100%;border:0;color:var(--cream);font-family:'Manrope',sans-serif;text-align:left;cursor:pointer;background:linear-gradient(105deg,rgba(217,164,65,.18),rgba(196,99,61,.12));transition:filter .18s ease,background .18s ease;}.install-row:hover{filter:brightness(1.12);background:linear-gradient(105deg,rgba(217,164,65,.27),rgba(196,99,61,.18));}.install-row span:nth-child(2){flex:1}.install-row strong,.install-row small{display:block}.install-row strong{font-size:12px}.install-row small{margin-top:3px;color:var(--cream-dim);font-size:9px;font-weight:500;line-height:1.35}.install-arrow{color:var(--gold);font-size:25px;font-weight:400;line-height:1;}
 .download-row{text-decoration:none;}
+html[data-palette="black-gold"][data-effective-mode="dark"] .play-btn-mini,
+html[data-palette="black-gold"][data-effective-mode="dark"] .big-play{box-shadow:0 0 10px rgba(255,216,77,.48),0 0 24px rgba(240,185,0,.24);}
+html[data-palette="black-gold"][data-effective-mode="dark"] .nav-btn.active,
+html[data-palette="black-gold"][data-effective-mode="dark"] .mini-fav,
+html[data-palette="black-gold"][data-effective-mode="dark"] .player-mode.active{text-shadow:0 0 9px rgba(255,216,77,.65);}
+html[data-palette="black-gold"][data-effective-mode="dark"] .progress-fill{background:linear-gradient(90deg,#f0b900,#fff0a6,#ffd84d);box-shadow:0 0 8px rgba(255,216,77,.65);}
+html[data-palette="black-gold"][data-effective-mode="dark"] .theme-mode-options button.active,
+html[data-palette="black-gold"][data-effective-mode="dark"] .palette-option.active{box-shadow:0 0 12px rgba(240,185,0,.25);}
 .settings-row:last-child{border-bottom:none;}
 .row-icon{width:26px;height:26px;border-radius:8px;background:rgba(217,164,65,0.18);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
 .settings-input-wrap{padding:12px 14px;}
