@@ -119,8 +119,19 @@ export async function signInWithGoogle() {
             return { ok: false, error: "Google sign-in couldn’t reach Firebase. Check your connection, then try again." };
         if (code.includes("web-storage-unsupported"))
             return { ok: false, error: "Google sign-in needs browser storage. Enable cookies and site data, then try again." };
-        if (code.includes("internal-error"))
-            return { ok: false, error: "Firebase could not complete Google sign-in. Check that Google is enabled in Firebase Authentication and that the app's domain is authorized, then try again." };
+        if (code.includes("internal-error")) {
+            // Firebase can wrap the underlying Identity Toolkit / OAuth response in
+            // auth/internal-error. Keep the server detail visible so configuration
+            // failures can be diagnosed instead of sending users in circles.
+            const detail = String(e?.customData?.serverResponse || e?.message || "").trim();
+            console.error("Google sign-in internal error", { code, detail });
+            return {
+                ok: false,
+                error: detail
+                    ? `Google sign-in failed (${code}): ${detail}`
+                    : `Google sign-in failed (${code}). Check the browser console for details.`,
+            };
+        }
         return { ok: false, error: e?.message || "Google sign-in failed. Please try again." };
     }
 }
