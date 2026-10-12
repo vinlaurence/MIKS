@@ -156,8 +156,8 @@ function refreshInstallButton(): void {
     label.textContent = "Miks app installed";
     note.textContent = "You are using the installed app.";
   } else if (installPrompt) {
-    label.textContent = "Install Miks app";
-    note.textContent = "Tap to download and install Miks on this device.";
+    label.textContent = "Install Android app";
+    note.textContent = "Use your browser prompt to install Miks on this device.";
   }
 }
 

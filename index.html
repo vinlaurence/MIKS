@@ -15,7 +15,7 @@
 <link rel="icon" href="icons/miks-logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="styles.css?v=mini-player-close-20261013">
+<link rel="stylesheet" href="styles.css?v=platform-downloads-20261013">
 </head>
 <body>
 
@@ -312,9 +312,10 @@
       </div>
 
       <div>
-        <div class="settings-group-label">Miks app</div>
+        <div class="settings-group-label">Downloads</div>
         <div class="settings-card">
-          <button type="button" class="settings-row install-row" id="btn-install-app"><span class="row-icon">⬇</span><span><strong id="install-app-label">Download Miks app</strong><small id="install-app-note">Install Miks on this phone for quick access.</small></span><span class="install-arrow">›</span></button>
+          <button type="button" class="settings-row install-row" id="btn-install-app"><span class="row-icon">▣</span><span><strong id="install-app-label">Android app (browser install)</strong><small id="install-app-note">Install Miks from your Android browser. APK build is not available yet.</small></span><span class="install-arrow" aria-hidden="true">›</span></button>
+          <a class="settings-row install-row download-row" href="/downloads/miks-windows-setup.exe" download><span class="row-icon">▱</span><span><strong>Windows desktop app</strong><small>Download the Windows installer · version 1.0.5</small></span><span class="install-arrow" aria-hidden="true">↓</span></a>
         </div>
       </div>
 
@@ -391,6 +392,6 @@
   <audio id="audio-el" preload="none"></audio>
 </div>
 
-<script src="dist/app.js?v=mini-player-close-20261013" type="module"></script>
+<script src="dist/app.js?v=platform-downloads-20261013" type="module"></script>
 </body>
 </html>
