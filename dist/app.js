@@ -29,7 +29,7 @@ const PALETTES = [
     { id: "lavender", name: "Lavender", colors: ["#15111b", "#262033", "#ac83e6", "#d1b4ff"], lightBg: "#f7f3fc", lightSurface: "#ebe2f7", darkBg: "#15111b", darkSurface: "#262033" },
     { id: "sunset", name: "Sunset", colors: ["#1b110e", "#30201b", "#e28b59", "#ffc18e"], lightBg: "#fff5ef", lightSurface: "#f5e3d8", darkBg: "#1b110e", darkSurface: "#30201b" },
     { id: "rose", name: "Rose", colors: ["#1a1015", "#2d1c25", "#df779e", "#ffb4cd"], lightBg: "#fff3f7", lightSurface: "#f4e0e8", darkBg: "#1a1015", darkSurface: "#2d1c25" },
-    { id: "black-gold", name: "Black & Gold", colors: ["#050505", "#171000", "#f0b900", "#ffd84d"], lightBg: "#f9f1d1", lightSurface: "#f0e0a8", darkBg: "#050505", darkSurface: "#11100b" },
+    { id: "black-gold", name: "Black & Gold", colors: ["#050505", "#211800", "#e6a900", "#ffe27a"], lightBg: "#fbf0c5", lightSurface: "#f1dfa0", darkBg: "#050505", darkSurface: "#1c1604" },
 ];
 const storedThemeMode = localStorage.getItem("miks.themeMode");
 let themeMode = storedThemeMode === "light" ? "light" : "dark";
