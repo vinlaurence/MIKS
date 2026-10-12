@@ -132,6 +132,7 @@ const PALETTES: Palette[] = [
   { id: "lavender", name: "Lavender", colors: ["#15111b", "#262033", "#ac83e6", "#d1b4ff"], lightBg: "#f7f3fc", lightSurface: "#ebe2f7", darkBg: "#15111b", darkSurface: "#262033" },
   { id: "sunset", name: "Sunset", colors: ["#1b110e", "#30201b", "#e28b59", "#ffc18e"], lightBg: "#fff5ef", lightSurface: "#f5e3d8", darkBg: "#1b110e", darkSurface: "#30201b" },
   { id: "rose", name: "Rose", colors: ["#1a1015", "#2d1c25", "#df779e", "#ffb4cd"], lightBg: "#fff3f7", lightSurface: "#f4e0e8", darkBg: "#1a1015", darkSurface: "#2d1c25" },
+  { id: "black-gold", name: "Black & Gold", colors: ["#050505", "#11100b", "#d4af37", "#f4d35e"], lightBg: "#f7f2df", lightSurface: "#e9dfbe", darkBg: "#050505", darkSurface: "#11100b" },
 ];
 const storedThemeMode = localStorage.getItem("miks.themeMode");
 let themeMode: ThemeMode = storedThemeMode === "light" ? "light" : "dark";
