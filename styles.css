@@ -454,8 +454,7 @@ body{background:#070908;}
   #connection-status.is-offline{top:58px;right:12px;}
   .nav-btn{font-size:8px;}
   .nav-btn .nav-icon{font-size:15px;}
-  /* Keep the phone tab bar focused on the five main destinations. */
-  .bottom-nav .nav-btn[data-route="all-music"],
+  /* Keep All Music easy to reach from the phone tab bar; Profile stays in the account flow. */
   .bottom-nav .nav-btn[data-route="profile"]{display:none;}
   /* Secondary player actions remain available in the full player/library. */
   .mini-player .mini-fav,
