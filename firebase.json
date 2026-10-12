@@ -19,6 +19,7 @@
       "**/firestore.rules",
       ".firebase/**",
       "**/node_modules/**",
+      "downloads/**",
       "src/**",
       "src-tauri/**",
       "functions/**",
