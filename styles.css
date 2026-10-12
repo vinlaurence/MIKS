@@ -443,10 +443,25 @@ body{background:#070908;}
   .art-row{grid-template-columns:repeat(6,minmax(0,1fr));}
 }
 @media (max-width:599px){
+  /* Keep the app frame in the phone viewport; scroll content inside each screen. */
+  html,body{width:100%;height:100%;min-height:0;overflow:hidden;}
+  body{position:fixed;inset:0;display:block;}
+  #app{width:100%;max-width:none;height:100vh;height:100dvh;max-height:none;margin:0;}
   .sidebar-collapse{display:none;}
   .bottom-nav{background:#101311;}
+  /* The online sync notice is persistent noise and sits on top of the header actions. */
+  #connection-status.is-online{display:none;}
+  #connection-status.is-offline{top:58px;right:12px;}
   .nav-btn{font-size:8px;}
   .nav-btn .nav-icon{font-size:15px;}
+  /* Keep the phone tab bar focused on the five main destinations. */
+  .bottom-nav .nav-btn[data-route="all-music"],
+  .bottom-nav .nav-btn[data-route="profile"]{display:none;}
+  /* Secondary player actions remain available in the full player/library. */
+  .mini-player .mini-fav,
+  .mini-player #btn-shuffle,
+  .mini-player #btn-repeat,
+  .mini-player .queue-open{display:none;}
   .home-mood-entry{font-size:17px;}
   .art-card{flex-basis:34%;}
   .transport{gap:9px;}
@@ -872,3 +887,4 @@ html[data-effective-mode="dark"] .screen.visible{animation:screen-enter 620ms cu
 }
 @keyframes lyrics-panel-enter{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
 @media (prefers-reduced-motion:reduce){.now-playing-body,.now-playing-main,.lyrics-panel{transition:none!important;animation:none!important}}
+.all-music-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;color:var(--cream-dim);font-size:10px}.all-music-controls select{border:1px solid var(--glass-border);border-radius:8px;padding:7px 9px;background:var(--glass);color:var(--cream);font:600 10px 'Manrope',sans-serif}.all-music-controls button:disabled{opacity:.45;cursor:default}.all-music-controls #all-music-page-label{min-width:100px;text-align:center}

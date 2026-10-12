@@ -135,6 +135,23 @@
     </div>
   </section>
 
+  <!-- ============ ALL MUSIC ============ -->
+  <section id="screen-all-music" class="screen">
+    <div class="bg-art"></div><div class="bg-shade"></div>
+    <div class="settings-head"><div><div class="mood-eyebrow">Browse the full collection</div><div class="settings-title">All Music</div></div></div>
+    <div class="discover-scroll">
+      <div class="catalog-source-note">Christian music catalog · playable tracks · browse by page</div>
+      <div class="all-music-controls">
+        <label for="all-music-page-size">Tracks per page</label>
+        <select id="all-music-page-size" aria-label="Tracks per page"><option value="50">50</option><option value="100">100</option></select>
+        <button type="button" class="catalog-play" id="all-music-prev" disabled>Previous</button>
+        <span id="all-music-page-label" aria-live="polite">Page 1</span>
+        <button type="button" class="catalog-play" id="all-music-next">Next</button>
+      </div>
+      <div class="queue-list discover-results" id="all-music-results"><div class="empty-note">Loading music…</div></div>
+    </div>
+  </section>
+
   <!-- ============ MOOD AI ============ -->
   <section id="screen-mood" class="screen">
     <div class="bg-art"></div>
@@ -360,6 +377,7 @@
     <div class="sidebar-caption">Your space</div>
     <button class="nav-btn active" data-route="home" title="Home"><span class="nav-icon">⌂</span><span class="nav-label">Home</span></button>
     <button class="nav-btn" data-route="discover" title="Discover"><span class="nav-icon">⌕</span><span class="nav-label">Discover</span></button>
+    <button class="nav-btn" data-route="all-music" title="All Music"><span class="nav-icon">♫</span><span class="nav-label">All Music</span></button>
     <button class="nav-btn" data-route="mood" title="Mood AI"><span class="nav-icon">✦</span><span class="nav-label">Mood AI</span></button>
     <button class="nav-btn" data-route="playlist" title="Library"><span class="nav-icon">▦</span><span class="nav-label">Library</span></button>
     <button class="nav-btn" data-route="favorites" title="Favorites"><span class="nav-icon">♡</span><span class="nav-label">Favorites</span></button>

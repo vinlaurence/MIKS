@@ -192,9 +192,13 @@ let lyricsLastActiveLine = -1;
 let lyricsLastRequestAt = 0;
 let lyricsRequestChain = Promise.resolve();
 let lyricsRetryAfter = 0;
+let allMusicPage = 1;
+let allMusicPageSize = 50;
+let allMusicRequestId = 0;
 const screens = {
     home: $("screen-home"),
     discover: $("screen-discover"),
+    "all-music": $("screen-all-music"),
     mood: $("screen-mood"),
     playlist: $("screen-playlist"),
     "now-playing": $("screen-now-playing"),
@@ -225,6 +229,8 @@ function navigate(route) {
         renderFavorites();
     if (route === "discover")
         renderDiscover();
+    if (route === "all-music")
+        void loadAllMusicPage();
     if (route === "profile")
         renderProfile();
     if (route === "admin")
@@ -261,7 +267,7 @@ function localDateKey(date) {
 const PLAYLIST_STORAGE = "miks.savedPlaylists";
 const LIKES_STORAGE = "miks.likedTrackIds";
 const JAMENDO_BASE = "https://api.jamendo.com/v3.0/tracks/";
-async function jamendoSearch(params) {
+async function jamendoRequest(params) {
     try {
         const query = new URLSearchParams({
             client_id: state.apiKey,
@@ -277,14 +283,17 @@ async function jamendoSearch(params) {
         const data = await response.json();
         if (data.headers.status !== "success") {
             showToast(data.headers.error_message || "Jamendo request failed.");
-            return [];
+            return { ...data, results: [] };
         }
-        return data.results;
+        return data;
     }
     catch {
         showToast("Couldn't reach Jamendo. Check your connection.");
-        return [];
+        return { headers: { status: "error", code: 0, error_message: "Network request failed" }, results: [] };
     }
+}
+async function jamendoSearch(params) {
+    return (await jamendoRequest(params)).results;
 }
 function searchByTag(tag) {
     return jamendoSearch({ tags: `christian+${tag}`, order: "popularity_total" });
@@ -341,6 +350,35 @@ async function searchFullMusicCatalog(query) {
         $("search-results-title").textContent = title;
         holder.innerHTML = `<div class="empty-note">${escapeHtml(error?.message || "The music catalog is unavailable. Check your connection and try again.")}</div>`;
     }
+}
+async function loadAllMusicPage() {
+    const requestId = ++allMusicRequestId;
+    const holder = $("all-music-results");
+    const prev = $("all-music-prev");
+    const next = $("all-music-next");
+    const label = $("all-music-page-label");
+    prev.disabled = allMusicPage <= 1;
+    next.disabled = true;
+    label.textContent = `Page ${allMusicPage} · loading`;
+    holder.innerHTML = `<div class="loading-spinner"></div>`;
+    const response = await jamendoRequest({ limit: String(allMusicPageSize), offset: String((allMusicPage - 1) * allMusicPageSize), order: "popularity_total", fullcount: "true" });
+    if (requestId !== allMusicRequestId)
+        return;
+    const tracks = response.results;
+    const total = Number(response.headers.results_fullcount);
+    label.textContent = Number.isFinite(total) && total >= 0
+        ? `Page ${allMusicPage} of ${Math.ceil(total / allMusicPageSize)} · ${tracks.length} tracks`
+        : `Page ${allMusicPage} · ${tracks.length} tracks`;
+    next.disabled = Number.isFinite(total) && total >= 0
+        ? allMusicPage * allMusicPageSize >= total
+        : tracks.length < allMusicPageSize;
+    if (!tracks.length && allMusicPage > 1) {
+        allMusicPage = Math.max(1, allMusicPage - 1);
+        void loadAllMusicPage();
+        return;
+    }
+    holder.innerHTML = tracks.length ? tracks.map((track, i) => trackRow(track, i, false)).join("") : `<div class="empty-note">No tracks found on this page.</div>`;
+    wireTrackRows(holder, tracks, (i) => { setQueue(tracks, `All Music · Page ${allMusicPage}`); playIndex(i); navigate("playlist"); });
 }
 const SAFE_MUSIC_TAGS = new Set(["acoustic", "ambient", "chillout", "classical", "country", "electronic", "folk", "gospel", "hiphop", "indie", "instrumental", "jazz", "metal", "piano", "pop", "relax", "rock", "soul", "soundtrack", "world"]);
 function fallbackMoodMapping(prompt) {
@@ -1954,6 +1992,23 @@ function wireStatic() {
     $("pill-create-playlist").addEventListener("click", createEmptyPlaylist);
     $("btn-settings-back").addEventListener("click", () => navigate("home"));
     $("btn-refresh-trending").addEventListener("click", () => loadTrending());
+    $("all-music-page-size").addEventListener("change", (event) => {
+        allMusicPageSize = Number(event.currentTarget.value) === 100 ? 100 : 50;
+        allMusicPage = 1;
+        void loadAllMusicPage();
+    });
+    $("all-music-prev").addEventListener("click", () => {
+        if (allMusicPage <= 1)
+            return;
+        allMusicPage -= 1;
+        void loadAllMusicPage();
+    });
+    $("all-music-next").addEventListener("click", () => {
+        if ($("all-music-next").disabled)
+            return;
+        allMusicPage += 1;
+        void loadAllMusicPage();
+    });
     $("btn-mood-go").addEventListener("click", async () => {
         const text = $("mood-text").value;
         if (!text.trim())
