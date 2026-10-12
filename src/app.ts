@@ -381,6 +381,8 @@ function localDateKey(date: Date): string {
 const PLAYLIST_STORAGE = "miks.savedPlaylists";
 const LIKES_STORAGE = "miks.likedTrackIds";
 const JAMENDO_BASE = "https://api.jamendo.com/v3.0/tracks/";
+const MOOD_MIX_CANDIDATE_LIMIT = 200;
+const previousMoodMixIds = new Map<string, Set<string>>();
 
 async function jamendoRequest(params: Record<string, string>): Promise<JamendoResponse> {
   try {
@@ -413,6 +415,25 @@ async function jamendoSearch(params: Record<string, string>): Promise<MusicTrack
 
 function searchByTag(tag: string): Promise<MusicTrack[]> {
   return jamendoSearch({ tags: `christian+${tag}`, order: "popularity_total" });
+}
+
+async function searchRandomMoodMix(params: Record<string, string>, key: string): Promise<MusicTrack[]> {
+  const tracks = await jamendoSearch({ ...params, limit: String(MOOD_MIX_CANDIDATE_LIMIT) });
+  if (tracks.length < 2) return tracks;
+
+  // Avoid showing the same set again when someone leaves a mood and picks it again.
+  const previousIds = previousMoodMixIds.get(key) || new Set<string>();
+  const unseen = tracks.filter((track) => !previousIds.has(String(track.id)));
+  const candidates = unseen.length >= Math.min(12, tracks.length) ? unseen : tracks;
+
+  // Jamendo returns a stable popularity order, so shuffle its larger result pool locally.
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  const mix = candidates.slice(0, 12);
+  previousMoodMixIds.set(key, new Set(mix.map((track) => String(track.id))));
+  return mix;
 }
 
 function normalizedCredit(value: string): string {
@@ -534,7 +555,10 @@ async function createSemanticMoodMix(prompt: string, autoplay = false): Promise<
   const analysis = await mapMoodToMusic(cleanPrompt);
   state.moodAnalysis = analysis;
   const tags = analysis.recommended_tags.join("+");
-  const tracks = await jamendoSearch({ tags: "christian", fuzzytags: tags || "acoustic", order: "relevance" });
+  const tracks = await searchRandomMoodMix(
+    { tags: "christian", fuzzytags: tags || "acoustic", order: "relevance" },
+    `semantic:${tags || "acoustic"}`,
+  );
   const label = `${analysis.primary_mood || "Your mood"} Christian mix`;
   state.queueLabel = label;
   state.moodResults = tracks;
@@ -1491,7 +1515,10 @@ async function createMoodMix(tag: string, label: string, autoplay = true): Promi
   state.moodAnalysis = null;
   state.queueLabel = `${label.trim()} mix`;
   if (state.route === "mood") $("mood-status").innerHTML = `<div class="loading-spinner"></div>`;
-  const tracks = await searchByTag(tag);
+  const tracks = await searchRandomMoodMix(
+    { tags: `christian+${tag}`, order: "popularity_total" },
+    `chip:${tag}`,
+  );
   state.moodResults = tracks;
   if (tracks.length) {
     await recordMoodSession(state.queueLabel);
