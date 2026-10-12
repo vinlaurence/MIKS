@@ -24,6 +24,7 @@
       <li><strong>Music activity:</strong> favorites, saved playlists, track metadata, listening history, listening interactions, and mood labels you choose. Signed-in data is stored in Firebase/Firestore under your account.</li>
       <li><strong>Device storage:</strong> app preferences, lyrics cache, and guest listening history may be stored in your browser or app storage.</li>
       <li><strong>AI feature inputs:</strong> when you request a mood mix, playlist enhancement, or weekly reflection, the related text, mood labels, and track titles and artists are sent through Miks’ Firebase service to OpenAI to generate the requested result. Miks does not send audio recordings to these AI features.</li>
+      <li><strong>Abuse prevention:</strong> catalog-search requests are briefly counted by network address in the running service to limit automated overuse. The rate-limit counter is held in memory and is not written to your account or stored as a long-term IP history.</li>
     </ul>
 
     <h2>Services Miks uses</h2>

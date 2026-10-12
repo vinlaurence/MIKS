@@ -3,7 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function admin() {
-      return signedIn() && request.auth.token.email in [
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
         'vinlaurence1@gmail.com',
         'vinlaurenceadmin@gmail.com'
       ];
@@ -13,19 +15,20 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email;
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'signedUpAt'])
+        && request.resource.data.keys().hasAll(['uid', 'email', 'signedUpAt'])
+        && request.resource.data.signedUpAt is string;
       allow update: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == request.auth.token.email;
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'signedUpAt'])
+        && request.resource.data.signedUpAt is string;
       allow read: if admin() || (signedIn() && request.auth.uid == userId);
     }
-    match /users/{userId}/{document=**} {
+    match /users/{userId}/{collection}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == userId;
-    }
-    match /activity/{activityId} {
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if admin();
     }
   }
 }

@@ -4,7 +4,7 @@
 // ============================================================
 import { firebaseReady, getCurrentUser, onAuthChange, signUp, signIn, signInWithGoogle, signOutUser, toggleFavorite as fbToggleFavorite, getFavorites, getPlaylists, savePlaylist, logMoodSession, getMoodHistory, analyzeMusicWithAI, searchMusicCatalog, recordAppOpen, getAdminDashboard, saveListeningEvent, getListeningHistory, getListeningEvents, getListeningInteractions, saveListeningInteraction, clearListeningHistory, } from "./firebase-service.js";
 import { sendPasswordReset } from "./firebase-password-reset.js";
-const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12";
+const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12.2";
 const MOOD_CHIPS = [
     { label: "Happy", icon: "☼", tag: "happy" },
     { label: "Chill", icon: "≋", tag: "chillout" },
@@ -68,7 +68,9 @@ async function handleInstallApp() {
     showToast(isIos ? "Safari: tap Share, then Add to Home Screen" : "Chrome: open ⋮ menu, then tap Install app");
 }
 function isAdmin(user) {
-    return !!user?.email && ADMIN_EMAILS.has(String(user.email).toLowerCase());
+    return user?.emailVerified === true
+        && !!user?.email
+        && ADMIN_EMAILS.has(String(user.email).toLowerCase());
 }
 function updateBrandLogos(tileColor, markColor) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="1" y="1" width="62" height="62" rx="14" fill="${tileColor}"/><path d="M15 14c4 2 8 2 12-2 4 3 8 3 12 0 4 4 8 4 12 2l4 8v17c-3 6-8 10-15 13l-8-2-8 2c-7-3-12-7-15-13V22z" fill="${markColor}"/><path d="M7 22c-3 2-4 5-4 9s1 7 4 9l4 2V20zm50 0c3 2 4 5 4 9s-1 7-4 9l-4 2V20z" fill="${markColor}"/><ellipse cx="32" cy="31" rx="16" ry="9" fill="${tileColor}"/><path d="m32 24 8 7-8 7-8-7z" fill="${markColor}"/><path d="m43 49 6-5-1 7-7 3z" fill="${markColor}"/></svg>`;

@@ -12,6 +12,12 @@
     "ignore": [
       "firebase.json",
       "**/.*",
+      ".git",
+      ".git/**",
+      "**/.git/**",
+      "firestore.rules",
+      "**/firestore.rules",
+      ".firebase/**",
       "**/node_modules/**",
       "src/**",
       "src-tauri/**",
@@ -31,6 +37,7 @@
           { "key": "Content-Security-Policy", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https://miks-510e5.firebaseapp.com https://accounts.google.com; connect-src 'self' https://api.jamendo.com https://lrclib.net https://*.googleapis.com https://*.cloudfunctions.net https://*.run.app https://*.firebaseio.com https://*.firestore.googleapis.com wss://*.firebaseio.com wss://*.firestore.googleapis.com; upgrade-insecure-requests" },
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
           { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=()" }
         ]
       }

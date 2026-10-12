@@ -75,7 +75,7 @@ interface JamendoResponse {
 }
 
 type Route = "home" | "discover" | "mood" | "playlist" | "now-playing" | "favorites" | "profile" | "settings" | "admin";
-const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12";
+const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12.2";
 
 interface AppState {
   route: Route;
@@ -179,7 +179,9 @@ async function handleInstallApp(): Promise<void> {
 }
 
 function isAdmin(user: any | null): boolean {
-  return !!user?.email && ADMIN_EMAILS.has(String(user.email).toLowerCase());
+  return user?.emailVerified === true
+    && !!user?.email
+    && ADMIN_EMAILS.has(String(user.email).toLowerCase());
 }
 
 function updateBrandLogos(tileColor: string, markColor: string): void {
