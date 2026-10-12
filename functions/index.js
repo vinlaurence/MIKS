@@ -13,6 +13,71 @@ const ALLOWED_TAGS = new Set([
   "piano", "pop", "relax", "rock", "soul", "soundtrack", "world",
 ]);
 
+// MusicBrainz asks API clients to stay at or below one request per second and
+// identify themselves with an application User-Agent. Keep requests serialized
+// through one function instance and cache repeated searches in memory.
+let musicBrainzRequestChain = Promise.resolve();
+let lastMusicBrainzRequestAt = 0;
+const musicBrainzCache = new Map();
+
+async function searchMusicBrainz(query) {
+  const cacheKey = query.toLocaleLowerCase();
+  const cached = musicBrainzCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.results;
+
+  const request = musicBrainzRequestChain.then(async () => {
+    const cachedAfterQueue = musicBrainzCache.get(cacheKey);
+    if (cachedAfterQueue && cachedAfterQueue.expiresAt > Date.now()) return cachedAfterQueue.results;
+
+    const waitMs = Math.max(0, 1000 - (Date.now() - lastMusicBrainzRequestAt));
+    if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+    const url = new URL("https://musicbrainz.org/ws/2/recording/");
+    url.searchParams.set("query", query);
+    url.searchParams.set("fmt", "json");
+    url.searchParams.set("limit", "25");
+    lastMusicBrainzRequestAt = Date.now();
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Miks/1.0.5 (https://github.com/vinlaurence/MIKS)",
+      },
+    });
+    if (!response.ok) {
+      console.error("MusicBrainz request failed", response.status);
+      throw new HttpsError("unavailable", "The music catalog is temporarily unavailable. Please try again.");
+    }
+
+    const payload = await response.json();
+    const results = (payload.recordings || []).map((recording) => {
+      const credits = Array.isArray(recording["artist-credit"]) ? recording["artist-credit"] : [];
+      const artist = credits.map((credit) => typeof credit === "string"
+        ? credit
+        : `${credit.name || credit.artist?.name || ""}${credit.joinphrase || ""}`).join("").trim();
+      return {
+        id: String(recording.id || ""),
+        title: String(recording.title || "Unknown recording"),
+        artist: artist || "Unknown artist",
+        duration: Number(recording.length) || 0,
+        firstReleaseDate: String(recording["first-release-date"] || ""),
+        disambiguation: String(recording.disambiguation || ""),
+        url: `https://musicbrainz.org/recording/${encodeURIComponent(String(recording.id || ""))}`,
+      };
+    }).filter((recording) => recording.id);
+
+    musicBrainzCache.set(cacheKey, { results, expiresAt: Date.now() + 30 * 60 * 1000 });
+    if (musicBrainzCache.size > 300) {
+      for (const [key, value] of musicBrainzCache) {
+        if (value.expiresAt <= Date.now() || musicBrainzCache.size > 250) musicBrainzCache.delete(key);
+      }
+    }
+    return results;
+  });
+
+  musicBrainzRequestChain = request.catch(() => undefined);
+  return request;
+}
+
 async function enforceDailyLimit(uid) {
   const day = new Date().toISOString().slice(0, 10);
   const ref = db.collection("aiUsage").doc(uid);
@@ -99,4 +164,21 @@ exports.analyzeMusic = onCall({
   const result = await askOpenAi(mode, input);
   if (mode !== "weekly") result.recommended_tags = cleanTags(result.recommended_tags);
   return result;
+});
+
+exports.searchMusicCatalog = onCall({
+  region: "us-central1",
+  maxInstances: 1,
+  concurrency: 1,
+  timeoutSeconds: 20,
+}, async (request) => {
+  const query = String(request.data?.query || "").trim().replace(/\s+/g, " ").slice(0, 100);
+  if (query.length < 2) throw new HttpsError("invalid-argument", "Enter at least two characters to search the music catalog.");
+  try {
+    return { recordings: await searchMusicBrainz(query) };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    console.error("MusicBrainz search failed", error?.message || error);
+    throw new HttpsError("unavailable", "Couldn't reach the music catalog. Check your connection and try again.");
+  }
 });

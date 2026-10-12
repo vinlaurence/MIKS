@@ -14,11 +14,11 @@ async function loadFirebase(): Promise<void> {
   if (!firebaseLoad) {
     firebaseLoad = Promise.all([
       // @ts-ignore Firebase CDN modules are loaded by the browser at runtime.
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
       // @ts-ignore Firebase CDN modules are loaded by the browser at runtime.
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"),
       // @ts-ignore Firebase CDN modules are loaded by the browser at runtime.
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"),
     ]).then(async ([appModule, authModule, firestoreModule]) => {
       firebase = { ...authModule, ...firestoreModule };
       appInstance = appModule.initializeApp(firebaseConfig);
@@ -45,11 +45,22 @@ export async function analyzeMusicWithAI(payload: Record<string, unknown>): Prom
   await loadFirebase();
   if (!auth?.currentUser || !appInstance) throw new Error("Sign in to use Miks AI.");
   // @ts-ignore Firebase callable Functions SDK is loaded from the same CDN as Auth and Firestore.
-  const functionsModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js");
+  const functionsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js");
   const functions = functionsModule.getFunctions(appInstance, "us-central1");
   const analyze = functionsModule.httpsCallable(functions, "analyzeMusic");
   const result = await analyze(payload);
   return result.data;
+}
+
+export async function searchMusicCatalog(query: string): Promise<any[]> {
+  await loadFirebase();
+  if (!appInstance) throw new Error("Music catalog search is unavailable because Firebase isn't configured.");
+  // @ts-ignore Firebase callable Functions SDK is loaded from the same CDN as Auth and Firestore.
+  const functionsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js");
+  const functions = functionsModule.getFunctions(appInstance, "us-central1");
+  const search = functionsModule.httpsCallable(functions, "searchMusicCatalog");
+  const result = await search({ query });
+  return Array.isArray(result.data?.recordings) ? result.data.recordings : [];
 }
 
 export function onAuthChange(cb: (user: any | null) => void): void {
@@ -96,7 +107,11 @@ export async function signInWithGoogle(): Promise<{ ok: boolean; error?: string 
     const code = String(e?.code || "");
     if (code.includes("popup-closed-by-user")) return { ok: false, error: "Google sign-in was cancelled." };
     if (code.includes("popup-blocked")) return { ok: false, error: "Your browser blocked the Google sign-in window. Allow pop-ups and try again." };
-    if (code.includes("operation-not-allowed")) return { ok: false, error: "Google sign-in is not enabled for this app yet." };
+    if (code.includes("operation-not-allowed")) return { ok: false, error: "Google sign-in is disabled in Firebase. Enable the Google provider in Firebase Console → Authentication → Sign-in method." };
+    if (code.includes("unauthorized-domain")) return { ok: false, error: `This app domain (${location.hostname}) isn’t authorized for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.` };
+    if (code.includes("network-request-failed")) return { ok: false, error: "Google sign-in couldn’t reach Firebase. Check your connection, then try again." };
+    if (code.includes("web-storage-unsupported")) return { ok: false, error: "Google sign-in needs browser storage. Enable cookies and site data, then try again." };
+    if (code.includes("internal-error")) return { ok: false, error: "Firebase could not complete Google sign-in. Check that Google is enabled in Firebase Authentication and that the app's domain is authorized, then try again." };
     return { ok: false, error: e?.message || "Google sign-in failed. Please try again." };
   }
 }

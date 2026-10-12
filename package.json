@@ -4,6 +4,7 @@
   "version": "1.0.5",
   "scripts": {
     "build": "tsc",
+    "deploy:watch": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/firebase-deploy-watch.ps1",
     "android:prepare": "npm run build && npx tauri icon icons/miks-logo.svg && node scripts/prepare-mobile.mjs",
     "android:init": "tauri android init --ci --skip-targets-install",
     "android:build": "npm run android:prepare && tauri android build --apk --debug --target aarch64",

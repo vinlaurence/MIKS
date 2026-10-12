@@ -47,13 +47,17 @@
           <input type="password" class="field" id="login-password" placeholder="••••••••">
           <button type="button" class="show-password" id="btn-toggle-password">Show</button>
         </div>
+      <label class="policy-consent" id="policy-consent" hidden>
+        <input type="checkbox" id="policy-consent-check">
+        <span>I have read the <a href="privacy.html" target="_blank" rel="noopener noreferrer">Miks Privacy Policy</a>.</span>
+      </label>
         <button type="button" class="auth-reset" id="btn-password-reset">Forgot password?</button>
         <div class="auth-error" id="auth-error"></div>
         <button class="btn-primary" id="btn-login">Log in</button>
         <div class="auth-divider"><span>or</span></div>
-        <button type="button" class="btn-google" id="btn-google-signin">
+        <button type="button" class="btn-google" id="btn-google-signin" disabled>
           <svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.4-4.55H24v9.02h12.93c-.58 2.96-2.26 5.48-4.73 7.18l7.6 5.9c4.43-4.08 7.18-10.08 7.18-17.55Z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.2a23.9 23.9 0 0 0 0 21.58l7.98-6.2Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.9l-7.6-5.9c-2.11 1.42-4.82 2.27-8.3 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.2C6.51 42.62 14.62 48 24 48Z"/></svg>
-          <span>Continue with Google</span>
+          <span>Loading Google sign-in…</span>
         </button>
         <button class="btn-guest" id="btn-continue-guest" type="button">Try Miks as a guest</button>
         <div class="auth-toggle" id="auth-mode-toggle">New here? Create an account</div>
@@ -122,11 +126,12 @@
     <div class="bg-art"></div><div class="bg-shade"></div>
     <div class="settings-head"><div><div class="mood-eyebrow">Explore the catalog</div><div class="settings-title">Discover</div></div></div>
     <div class="discover-scroll">
-      <form class="search-box" id="search-form"><input id="search-input" type="search" placeholder="Search songs, artists, or a feeling" autocomplete="off"><button type="submit" aria-label="Search">→</button></form>
+      <form class="search-box" id="search-form"><input id="search-input" type="search" placeholder="Search the global music catalog" autocomplete="off"><button type="submit" aria-label="Search">→</button></form>
+      <div class="catalog-source-note">MusicBrainz metadata · exact Jamendo matches can play</div>
       <div class="section-label"><span>Browse by mood</span></div>
       <div class="discover-tags" id="discover-tags"></div>
       <div class="section-label"><span id="search-results-title">Find something new</span></div>
-      <div class="queue-list discover-results" id="search-results"><div class="empty-note">Search Christian-tagged Jamendo tracks, or choose a mood to start listening.</div></div>
+      <div class="queue-list discover-results" id="search-results"><div class="empty-note">Search recordings by artist or song. Exact Jamendo matches include playable audio.</div></div>
     </div>
   </section>
 
@@ -191,11 +196,19 @@
     <div class="bg-art"></div><div class="bg-shade"></div>
     <div class="now-playing-head"><button type="button" class="icon-btn" id="btn-now-playing-back" aria-label="Back">←</button><span>NOW PLAYING</span><span class="now-playing-context" id="now-playing-context">miks mix</span></div>
     <div class="now-playing-body">
-      <div class="now-playing-cover" id="now-playing-cover"></div>
-      <div class="now-playing-track"><div><h1 id="now-playing-title">Nothing playing</h1><p id="now-playing-artist">Choose a song to get started</p></div><button type="button" id="btn-now-playing-fav" aria-label="Add to favorites">♡</button></div>
-      <div class="now-playing-progress"><input type="range" id="now-playing-seek" min="0" max="100" value="0" aria-label="Seek through song"><div><span id="now-playing-current-time">0:00</span><span id="now-playing-duration">0:00</span></div></div>
-      <div class="now-playing-controls"><button type="button" id="btn-now-playing-shuffle" aria-label="Shuffle">⇄</button><button type="button" id="btn-now-playing-prev" aria-label="Previous track">⏮</button><button type="button" class="now-playing-play" id="btn-now-playing-play" aria-label="Play">▶</button><button type="button" id="btn-now-playing-next" aria-label="Next track">⏭</button><button type="button" id="btn-now-playing-repeat" aria-label="Repeat">↻</button></div>
-      <div class="now-playing-volume">Volume <input type="range" id="now-playing-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume"></div>
+      <div class="now-playing-main">
+        <div class="now-playing-cover" id="now-playing-cover"></div>
+        <div class="now-playing-track"><div><h1 id="now-playing-title">Nothing playing</h1><p id="now-playing-artist">Choose a song to get started</p></div><button type="button" id="btn-now-playing-fav" aria-label="Add to favorites">♡</button></div>
+        <div class="now-playing-progress"><input type="range" id="now-playing-seek" min="0" max="100" value="0" aria-label="Seek through song"><div><span id="now-playing-current-time">0:00</span><span id="now-playing-duration">0:00</span></div></div>
+        <div class="now-playing-controls"><button type="button" id="btn-now-playing-shuffle" aria-label="Shuffle">⇄</button><button type="button" id="btn-now-playing-prev" aria-label="Previous track">⏮</button><button type="button" class="now-playing-play" id="btn-now-playing-play" aria-label="Play">▶</button><button type="button" id="btn-now-playing-next" aria-label="Next track">⏭</button><button type="button" id="btn-now-playing-repeat" aria-label="Repeat">↻</button></div>
+        <button type="button" class="lyrics-toggle" id="btn-lyrics-toggle" aria-expanded="false" aria-controls="lyrics-panel"><span>♪</span> Show lyrics</button>
+        <div class="now-playing-volume">Volume <input type="range" id="now-playing-volume" min="0" max="1" step="0.05" value="1" aria-label="Volume"></div>
+      </div>
+      <section class="lyrics-panel" id="lyrics-panel" aria-label="Song lyrics" hidden>
+        <div class="lyrics-panel-head"><strong>Lyrics</strong><span>via LRCLIB</span></div>
+        <div class="lyrics-status" id="lyrics-status" role="status" aria-live="polite">Loading lyrics…</div>
+        <div class="lyrics-lines" id="lyrics-lines"></div>
+      </section>
     </div>
   </section>
 
@@ -350,6 +363,7 @@
     <button class="nav-btn" data-route="mood" title="Mood AI"><span class="nav-icon">✦</span><span class="nav-label">Mood AI</span></button>
     <button class="nav-btn" data-route="playlist" title="Library"><span class="nav-icon">▦</span><span class="nav-label">Library</span></button>
     <button class="nav-btn" data-route="favorites" title="Favorites"><span class="nav-icon">♡</span><span class="nav-label">Favorites</span></button>
+    <button class="nav-btn" data-route="profile" title="Profile"><span class="nav-icon">♙</span><span class="nav-label">Profile</span></button>
     <button class="nav-btn admin-nav" id="btn-admin" data-route="admin" title="Admin" style="display:none;"><span class="nav-icon">◈</span><span class="nav-label">Admin</span></button>
   </div>
 

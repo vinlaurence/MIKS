@@ -1,6 +1,6 @@
 // ============================================================
-// miks — mood-based music. Static front-end + Firebase (Auth/Firestore).
-// Music data: Jamendo API (client-side). No custom backend server.
+// miks — mood-based music. MusicBrainz provides broad recording metadata;
+// Jamendo provides playable audio when an exact catalog match is available.
 // ============================================================
 
 import {
@@ -18,6 +18,7 @@ import {
   logMoodSession,
   getMoodHistory,
   analyzeMusicWithAI,
+  searchMusicCatalog,
   recordAppOpen,
   getAdminDashboard,
   saveListeningEvent,
@@ -37,7 +38,30 @@ interface MusicTrack {
   image: string;
   audio: string;
   duration: number;
+  album_name?: string;
   playedAt?: string;
+}
+
+interface LyricsRecord {
+  plainLyrics?: string | null;
+  syncedLyrics?: string | null;
+  instrumental?: boolean;
+}
+
+interface TimedLyricLine {
+  time: number;
+  text: string;
+}
+
+interface CatalogRecording {
+  id: string;
+  title: string;
+  artist: string;
+  duration: number;
+  firstReleaseDate: string;
+  disambiguation: string;
+  url: string;
+  playableTrack?: MusicTrack;
 }
 
 interface ListeningEvent {
@@ -272,6 +296,15 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string): T =>
 
 const audioEl = $<HTMLAudioElement>("audio-el");
 let activeAudioTrack: MusicTrack | null = null;
+let lyricsTrackId: string | null = null;
+let lyricsRecord: LyricsRecord | null = null;
+let lyricsLines: TimedLyricLine[] = [];
+let lyricsLoadingTrackId: string | null = null;
+let lyricsRequestToken = 0;
+let lyricsLastActiveLine = -1;
+let lyricsLastRequestAt = 0;
+let lyricsRequestChain: Promise<unknown> = Promise.resolve();
+let lyricsRetryAfter = 0;
 const screens: Record<Route, HTMLElement> = {
   home: $("screen-home"),
   discover: $("screen-discover"),
@@ -370,9 +403,56 @@ function searchByTag(tag: string): Promise<MusicTrack[]> {
   return jamendoSearch({ tags: `christian+${tag}`, order: "popularity_total" });
 }
 
-function searchByText(text: string): Promise<MusicTrack[]> {
-  const words = text.trim().split(/\s+/).slice(0, 4).join("+");
-  return jamendoSearch({ tags: "christian", fuzzytags: words || "chill", order: "relevance" });
+function normalizedCredit(value: string): string {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+async function searchFullMusicCatalog(query: string): Promise<void> {
+  const title = `Results for “${query}”`;
+  const holder = $("search-results");
+  const [catalogResult, jamendoResult] = await Promise.allSettled([
+    searchMusicCatalog(query),
+    jamendoSearch({ search: query, order: "relevance" }),
+  ]);
+  const jamendoTracks = jamendoResult.status === "fulfilled" ? jamendoResult.value : [];
+  if (catalogResult.status === "rejected") {
+    showToast("Global catalog unavailable; showing Jamendo matches.");
+    renderSearchResults(jamendoTracks, title);
+    return;
+  }
+  try {
+    const recordings = catalogResult.value;
+    const exactTracks = new Map<string, MusicTrack>();
+    for (const track of jamendoTracks) exactTracks.set(`${normalizedCredit(track.name)}::${normalizedCredit(track.artist_name)}`, track);
+    const catalogResults: CatalogRecording[] = recordings.map((recording: CatalogRecording) => ({
+      ...recording,
+      playableTrack: exactTracks.get(`${normalizedCredit(recording.title)}::${normalizedCredit(recording.artist)}`),
+    }));
+    const playables = catalogResults.filter((recording) => recording.playableTrack);
+    $("search-results-title").textContent = title;
+    holder.innerHTML = `<div class="catalog-summary">${catalogResults.length} MusicBrainz recordings · ${playables.length} exact Jamendo playback matches</div>${catalogResults.length ? catalogResults.map((recording) => {
+      const cover = recording.playableTrack?.album_image || recording.playableTrack?.image;
+      const date = recording.firstReleaseDate ? ` · ${escapeHtml(recording.firstReleaseDate)}` : "";
+      const seconds = Math.floor(recording.duration / 1000);
+      const duration = seconds > 0 ? ` · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : "";
+      return `<article class="catalog-result">${cover ? `<img class="catalog-cover" src="${escapeHtml(cover)}" alt="" loading="lazy">` : `<div class="catalog-cover catalog-cover-empty">♪</div>`}<div class="catalog-details"><strong class="catalog-title">${escapeHtml(recording.title)}</strong><span class="catalog-artist">${escapeHtml(recording.artist)}</span><span class="catalog-meta">MusicBrainz${date}${duration}${recording.disambiguation ? ` · ${escapeHtml(recording.disambiguation)}` : ""}</span></div><div class="catalog-actions">${recording.playableTrack ? `<button class="catalog-play" type="button" data-catalog-play="${escapeHtml(recording.id)}">Play</button>` : `<span class="catalog-unavailable">Metadata only</span>`}<a class="catalog-link" href="${escapeHtml(recording.url)}" target="_blank" rel="noopener noreferrer">Details</a></div></article>`;
+    }).join("") : `<div class="empty-note">No recordings found. Try another artist or title.</div>`}`;
+    const byId = new Map(catalogResults.map((recording) => [recording.id, recording]));
+    holder.querySelectorAll<HTMLButtonElement>("[data-catalog-play]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const recording = byId.get(button.dataset.catalogPlay || "");
+        if (!recording?.playableTrack) return;
+        const playableQueue = playables.map((item) => item.playableTrack!);
+        const index = playableQueue.findIndex((track) => track.id === recording.playableTrack!.id);
+        setQueue(playableQueue, title);
+        playIndex(index);
+        navigate("playlist");
+      });
+    });
+  } catch (error: any) {
+    $("search-results-title").textContent = title;
+    holder.innerHTML = `<div class="empty-note">${escapeHtml(error?.message || "The music catalog is unavailable. Check your connection and try again.")}</div>`;
+  }
 }
 
 const SAFE_MUSIC_TAGS = new Set(["acoustic", "ambient", "chillout", "classical", "country", "electronic", "folk", "gospel", "hiphop", "indie", "instrumental", "jazz", "metal", "piano", "pop", "relax", "rock", "soul", "soundtrack", "world"]);
@@ -679,8 +759,197 @@ function formatTime(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 }
 
+function lyricsCacheKey(track: MusicTrack): string {
+  return `miks.lyrics.v1.${encodeURIComponent(String(track.id))}`;
+}
+
+function saveLyricsCache(track: MusicTrack, record: LyricsRecord | null): void {
+  try {
+    localStorage.setItem(lyricsCacheKey(track), JSON.stringify({ savedAt: Date.now(), record }));
+  } catch { /* Lyrics remain available for the current session if local storage is full. */ }
+}
+
+function parseSyncedLyrics(value: string): TimedLyricLine[] {
+  const lines: TimedLyricLine[] = [];
+  for (const rawLine of value.split(/\r?\n/)) {
+    const timestamps = [...rawLine.matchAll(/\[(\d{1,3}):(\d{2})(?:[.:](\d{2,3}))?\]/g)];
+    const text = rawLine.replace(/\[\d{1,3}:\d{2}(?:[.:]\d{2,3})?\]/g, "").trim();
+    if (!text) continue;
+    for (const stamp of timestamps) {
+      const fraction = stamp[3] ? Number(`0.${stamp[3]}`) : 0;
+      lines.push({ time: Number(stamp[1]) * 60 + Number(stamp[2]) + fraction, text });
+    }
+  }
+  return lines.sort((a, b) => a.time - b.time);
+}
+
+function setLyricsStatus(message: string): void {
+  $("lyrics-status").textContent = message;
+}
+
+function retryDelaySeconds(value: string | null): number {
+  if (!value) return 2;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds > 0) return seconds;
+  const retryTime = Date.parse(value);
+  return Number.isFinite(retryTime) ? Math.max(1, Math.ceil((retryTime - Date.now()) / 1000)) : 2;
+}
+
+function renderLyrics(record: LyricsRecord | null): void {
+  const holder = $("lyrics-lines");
+  holder.replaceChildren();
+  lyricsLines = record?.syncedLyrics ? parseSyncedLyrics(record.syncedLyrics) : [];
+  lyricsLastActiveLine = -1;
+  if (record?.instrumental) {
+    setLyricsStatus("This track is instrumental.");
+    return;
+  }
+  if (lyricsLines.length) {
+    setLyricsStatus("Synced lyrics · tap a line to jump");
+    lyricsLines.forEach((line, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "lyric-line";
+      button.textContent = line.text;
+      button.dataset.lyricIndex = String(index);
+      button.addEventListener("click", () => { audioEl.currentTime = line.time; });
+      holder.append(button);
+    });
+    updateActiveLyricLine();
+    return;
+  }
+  const plainLyrics = record?.plainLyrics?.trim();
+  if (plainLyrics) {
+    setLyricsStatus("Plain lyrics");
+    plainLyrics.split(/\r?\n/).forEach((text) => {
+      const line = document.createElement("p");
+      line.className = "lyric-line lyric-line-plain";
+      line.textContent = text || " ";
+      holder.append(line);
+    });
+    return;
+  }
+  setLyricsStatus("Lyrics aren’t available for this track yet.");
+}
+
+function updateActiveLyricLine(): void {
+  if (!lyricsLines.length || $("lyrics-panel").hidden) return;
+  let activeIndex = -1;
+  for (let i = 0; i < lyricsLines.length && lyricsLines[i].time <= audioEl.currentTime; i++) activeIndex = i;
+  if (activeIndex === lyricsLastActiveLine) return;
+  const previous = $("lyrics-lines").querySelector(".lyric-line.active");
+  previous?.classList.remove("active");
+  lyricsLastActiveLine = activeIndex;
+  if (activeIndex < 0) return;
+  const current = $("lyrics-lines").querySelector<HTMLElement>(`[data-lyric-index="${activeIndex}"]`);
+  current?.classList.add("active");
+  current?.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+async function getLyricsResponse(url: URL): Promise<Response> {
+  const pending = lyricsRequestChain.then(async () => {
+    const waitMs = Math.max(0, 350 - (Date.now() - lyricsLastRequestAt));
+    if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
+    lyricsLastRequestAt = Date.now();
+    return fetch(url, { headers: { "X-User-Agent": "Miks/1.0.5 (https://github.com/vinlaurence/MIKS)" } });
+  });
+  lyricsRequestChain = pending.then(() => undefined, () => undefined);
+  return pending;
+}
+
+async function searchLyrics(track: MusicTrack): Promise<LyricsRecord | null> {
+  const url = new URL("https://lrclib.net/api/search");
+  url.searchParams.set("track_name", track.name);
+  url.searchParams.set("artist_name", track.artist_name);
+  const response = await getLyricsResponse(url);
+  if (!response.ok) return null;
+  const results = await response.json() as (LyricsRecord & { trackName?: string; artistName?: string })[];
+  return results.find((item) => item.syncedLyrics || item.plainLyrics) || null;
+}
+
+async function loadLyrics(track: MusicTrack): Promise<void> {
+  const trackId = String(track.id);
+  if (lyricsLoadingTrackId === trackId) return;
+  lyricsLoadingTrackId = trackId;
+  const requestToken = ++lyricsRequestToken;
+  setLyricsStatus("Looking for lyrics…");
+  $("lyrics-lines").replaceChildren();
+  try {
+    const cached = localStorage.getItem(lyricsCacheKey(track));
+    if (cached) {
+      const entry = JSON.parse(cached) as { savedAt?: number; record?: LyricsRecord | null };
+      if (Date.now() - Number(entry.savedAt || 0) < 180 * 24 * 60 * 60 * 1000) {
+        lyricsRecord = entry.record || null;
+        renderLyrics(lyricsRecord);
+        lyricsLoadingTrackId = null;
+        return;
+      }
+    }
+  } catch { /* Ignore invalid or unavailable local cache. */ }
+  if (!navigator.onLine) {
+    setLyricsStatus("You’re offline. Lyrics you’ve opened before are saved on this device.");
+    lyricsLoadingTrackId = null;
+    return;
+  }
+  if (lyricsRetryAfter > Date.now()) {
+    setLyricsStatus("Lyrics service is busy. Try again in a moment.");
+    lyricsLoadingTrackId = null;
+    return;
+  }
+  const url = new URL("https://lrclib.net/api/get");
+  url.searchParams.set("track_name", track.name);
+  url.searchParams.set("artist_name", track.artist_name);
+  if (track.album_name) url.searchParams.set("album_name", track.album_name);
+  const duration = Math.round(Number(track.duration));
+  if (duration > 0 && duration <= 3600) url.searchParams.set("duration", String(duration));
+  try {
+    const response = await getLyricsResponse(url);
+    if (requestToken !== lyricsRequestToken || lyricsTrackId !== trackId) return;
+    if (response.status === 404) {
+      const found = await searchLyrics(track);
+      if (requestToken !== lyricsRequestToken || lyricsTrackId !== trackId) return;
+      lyricsRecord = found;
+      saveLyricsCache(track, found);
+      renderLyrics(found);
+      return;
+    }
+    if (response.status === 429 || response.status === 503) {
+      const retry = retryDelaySeconds(response.headers.get("Retry-After"));
+      lyricsRetryAfter = Date.now() + retry * 1000;
+      setLyricsStatus("Lyrics service is busy. Try again in a moment.");
+      return;
+    }
+    if (!response.ok) throw new Error("Lyrics could not be loaded.");
+    const record = await response.json() as LyricsRecord;
+    if (requestToken !== lyricsRequestToken || lyricsTrackId !== trackId) return;
+    lyricsRecord = record;
+    saveLyricsCache(track, lyricsRecord);
+    renderLyrics(lyricsRecord);
+  } catch {
+    if (requestToken === lyricsRequestToken) setLyricsStatus("Couldn’t load lyrics. Check your connection and try again.");
+  } finally {
+    if (lyricsLoadingTrackId === trackId) lyricsLoadingTrackId = null;
+  }
+}
+
+function setLyricsTrack(track: MusicTrack | null): void {
+  const nextTrackId = track ? String(track.id) : null;
+  if (nextTrackId === lyricsTrackId) return;
+  lyricsTrackId = nextTrackId;
+  lyricsRecord = null;
+  lyricsLines = [];
+  lyricsLoadingTrackId = null;
+  lyricsRequestToken++;
+  lyricsLastActiveLine = -1;
+  $("lyrics-lines").replaceChildren();
+  $<HTMLButtonElement>("btn-lyrics-toggle").disabled = !track;
+  setLyricsStatus(track ? "Tap to load lyrics." : "Play a song to see its lyrics.");
+  if (track && !$<HTMLElement>("lyrics-panel").hidden) void loadLyrics(track);
+}
+
 function renderNowPlaying(): void {
   const track = state.queue[state.currentIndex];
+  setLyricsTrack(track || null);
   if (!track) {
     $("now-playing-title").textContent = "Nothing playing";
     $("now-playing-artist").textContent = "Choose a song to get started";
@@ -712,6 +981,7 @@ function playNowPlayingMix(): void {
 audioEl.addEventListener("timeupdate", () => {
   if (audioEl.duration) $("progress-fill").style.width = `${(audioEl.currentTime / audioEl.duration) * 100}%`;
   if (state.route === "now-playing") renderNowPlaying();
+  updateActiveLyricLine();
 });
 audioEl.addEventListener("play", () => {
   state.isPlaying = true;
@@ -1489,6 +1759,8 @@ function setAuthMode(mode: "login" | "signup"): void {
   $("login-email").setAttribute("placeholder", mode === "login" ? "you@email.com" : "Your email address");
   $("login-password").setAttribute("placeholder", mode === "login" ? "••••••••" : "At least 6 characters");
   document.querySelector(".login-card")?.classList.toggle("signup-mode", mode === "signup");
+  $<HTMLElement>("policy-consent").hidden = false;
+  $<HTMLInputElement>("policy-consent-check").required = mode === "signup";
   $("auth-mode-toggle").textContent =
     mode === "login" ? "New here? Create an account" : "Already have an account? Log in";
   $("auth-error").textContent = "";
@@ -1508,6 +1780,10 @@ async function handleAuthSubmit(): Promise<void> {
     $("auth-error").textContent = "Enter both email and password.";
     return;
   }
+  if (state.authMode === "signup" && !$<HTMLInputElement>("policy-consent-check").checked) {
+    $("auth-error").textContent = "Please read and acknowledge the Privacy Policy before creating your account.";
+    return;
+  }
   const result = state.authMode === "login" ? await signIn(email, password) : await signUp(email, password);
   if (!result.ok) {
     $("auth-error").textContent = result.error || "Something went wrong.";
@@ -1519,6 +1795,10 @@ async function handleAuthSubmit(): Promise<void> {
 }
 
 async function handleGoogleSignIn(): Promise<void> {
+  if (!$<HTMLInputElement>("policy-consent-check").checked) {
+    $("auth-error").textContent = "Please read and acknowledge the Privacy Policy before continuing with Google.";
+    return;
+  }
   const button = $<HTMLButtonElement>("btn-google-signin");
   const label = button.querySelector("span");
   button.disabled = true;
@@ -1749,6 +2029,18 @@ function wireStatic(): void {
   $("btn-now-playing-shuffle").addEventListener("click", () => { state.shuffle = !state.shuffle; renderNowPlaying(); updateMiniPlayer(); });
   $("btn-now-playing-repeat").addEventListener("click", () => { state.repeat = !state.repeat; renderNowPlaying(); updateMiniPlayer(); });
   $("btn-now-playing-fav").addEventListener("click", () => { const track = state.queue[state.currentIndex]; if (track) void handleToggleFavorite(track); });
+  $("btn-lyrics-toggle").addEventListener("click", () => {
+    const button = $<HTMLButtonElement>("btn-lyrics-toggle");
+    const panel = $("lyrics-panel");
+    const opening = panel.hidden !== false;
+    panel.hidden = !opening;
+    $("now-playing-body").classList.toggle("lyrics-open", opening);
+    button.setAttribute("aria-expanded", String(opening));
+    button.innerHTML = `<span>♪</span> ${opening ? "Hide lyrics" : "Show lyrics"}`;
+    const track = state.queue[state.currentIndex];
+    if (opening && track) void loadLyrics(track);
+    if (opening) updateActiveLyricLine();
+  });
   $("now-playing-seek").addEventListener("input", (e) => { if (audioEl.duration) audioEl.currentTime = Number((e.currentTarget as HTMLInputElement).value) / 100 * audioEl.duration; });
   $("now-playing-volume").addEventListener("input", (e) => { audioEl.volume = Number((e.currentTarget as HTMLInputElement).value); ($("volume-control") as HTMLInputElement).value = String(audioEl.volume); });
   $("admin-user-search").addEventListener("input", renderAdminUsers);
@@ -1767,7 +2059,7 @@ function wireStatic(): void {
     if (!term) return;
     $("search-results-title").textContent = `Results for “${term}”`;
     $("search-results").innerHTML = `<div class="loading-spinner"></div>`;
-    renderSearchResults(await searchByText(term), `Results for “${term}”`);
+    await searchFullMusicCatalog(term);
   });
   $("btn-clear-history").addEventListener("click", async () => {
     if (!state.history.length && !state.listeningEvents.length) return;
@@ -1825,7 +2117,8 @@ function init(): void {
   connectionBadge.setAttribute("aria-live", "polite");
   document.body.append(connectionBadge);
   const updateConnectionStatus = () => {
-    connectionBadge.textContent = navigator.onLine ? "Online · changes sync automatically" : "Offline · changes saved on this device";
+    connectionBadge.textContent = navigator.onLine ? "Online · syncing changes" : "Offline · saved on this device";
+    connectionBadge.classList.toggle("is-online", navigator.onLine);
     connectionBadge.classList.toggle("is-offline", !navigator.onLine);
   };
   window.addEventListener("online", updateConnectionStatus);
@@ -1864,6 +2157,10 @@ function init(): void {
   $("bottom-nav").style.display = "none";
 
   onAuthChange((user) => {
+    const googleButton = $<HTMLButtonElement>("btn-google-signin");
+    googleButton.disabled = false;
+    const googleLabel = googleButton.querySelector("span");
+    if (googleLabel && !user) googleLabel.textContent = "Continue with Google";
     if (user) onUserSignedIn(user);
     else onUserSignedOut();
   });
