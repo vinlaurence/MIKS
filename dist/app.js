@@ -4,6 +4,7 @@
 // ============================================================
 import { firebaseReady, getCurrentUser, onAuthChange, signUp, signIn, signInWithGoogle, signOutUser, toggleFavorite as fbToggleFavorite, getFavorites, getPlaylists, savePlaylist, logMoodSession, getMoodHistory, analyzeMusicWithAI, searchMusicCatalog, recordAppOpen, getAdminDashboard, saveListeningEvent, getListeningHistory, getListeningEvents, getListeningInteractions, saveListeningInteraction, clearListeningHistory, } from "./firebase-service.js";
 import { sendPasswordReset } from "./firebase-password-reset.js";
+const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12";
 const MOOD_CHIPS = [
     { label: "Happy", icon: "☼", tag: "happy" },
     { label: "Chill", icon: "≋", tag: "chillout" },
@@ -1891,6 +1892,20 @@ async function handleLogout() {
 }
 // ---------- Wiring ----------
 function wireStatic() {
+    const privacyConsent = $("policy-consent-check");
+    try {
+        privacyConsent.checked = localStorage.getItem(PRIVACY_ACK_KEY) === "accepted";
+    }
+    catch { /* Consent can still be checked for this session. */ }
+    privacyConsent.addEventListener("change", () => {
+        try {
+            if (privacyConsent.checked)
+                localStorage.setItem(PRIVACY_ACK_KEY, "accepted");
+            else
+                localStorage.removeItem(PRIVACY_ACK_KEY);
+        }
+        catch { /* Keep the current checkbox state if device storage is unavailable. */ }
+    });
     $("btn-login").addEventListener("click", handleAuthSubmit);
     $("btn-google-signin").addEventListener("click", () => void handleGoogleSignIn());
     $("btn-password-reset").addEventListener("click", () => void handlePasswordReset());

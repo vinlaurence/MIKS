@@ -75,6 +75,7 @@ interface JamendoResponse {
 }
 
 type Route = "home" | "discover" | "mood" | "playlist" | "now-playing" | "favorites" | "profile" | "settings" | "admin";
+const PRIVACY_ACK_KEY = "miks.privacyAccepted.v2026-10-12";
 
 interface AppState {
   route: Route;
@@ -1926,6 +1927,14 @@ async function handleLogout(): Promise<void> {
 
 // ---------- Wiring ----------
 function wireStatic(): void {
+  const privacyConsent = $<HTMLInputElement>("policy-consent-check");
+  try { privacyConsent.checked = localStorage.getItem(PRIVACY_ACK_KEY) === "accepted"; } catch { /* Consent can still be checked for this session. */ }
+  privacyConsent.addEventListener("change", () => {
+    try {
+      if (privacyConsent.checked) localStorage.setItem(PRIVACY_ACK_KEY, "accepted");
+      else localStorage.removeItem(PRIVACY_ACK_KEY);
+    } catch { /* Keep the current checkbox state if device storage is unavailable. */ }
+  });
   $("btn-login").addEventListener("click", handleAuthSubmit);
   $("btn-google-signin").addEventListener("click", () => void handleGoogleSignIn());
   $("btn-password-reset").addEventListener("click", () => void handlePasswordReset());
