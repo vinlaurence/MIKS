@@ -89,6 +89,7 @@ interface AppState {
   moodAnalysis: any | null;
   trending: MusicTrack[];
   currentUser: any | null;
+  guestMode: boolean;
   authMode: "login" | "signup";
   favoriteIds: Set<string>;
   favoritesList: MusicTrack[];
@@ -280,6 +281,7 @@ const state: AppState = {
   moodAnalysis: null,
   trending: [],
   currentUser: null,
+  guestMode: false,
   authMode: "login",
   favoriteIds: new Set(),
   favoritesList: [],
@@ -1903,6 +1905,7 @@ async function handlePasswordReset(): Promise<void> {
 
 async function onUserSignedIn(user: any): Promise<void> {
   state.currentUser = user;
+  state.guestMode = false;
   state.listeningEvents = [];
   state.selectedListeningDate = null;
   renderWeekStrip();
@@ -1976,11 +1979,15 @@ function updateAccountStatus(): void {
     logoutButton.style.display = "flex";
     adminButton.style.display = isAdmin(state.currentUser) ? "flex" : "none";
   } else {
-    text.textContent = "Not signed in";
-    logoutRow.style.display = "none";
-    logoutButton.style.display = "none";
+    text.textContent = state.guestMode ? "Browsing as a guest" : "Not signed in";
+    logoutRow.style.display = state.guestMode ? "flex" : "none";
+    logoutButton.style.display = state.guestMode ? "flex" : "none";
     adminButton.style.display = "none";
   }
+  const exitLabel = state.guestMode ? "Exit guest mode" : "Log out";
+  logoutButton.title = exitLabel;
+  logoutButton.setAttribute("aria-label", exitLabel);
+  $("logout-label").textContent = exitLabel;
   $("firebase-status").textContent = firebaseReady
     ? "Connected to Firebase."
     : "Firebase not configured — edit src/firebase-config.ts to enable real accounts, favorites, and streaks.";
@@ -1988,6 +1995,7 @@ function updateAccountStatus(): void {
 
 async function handleLogout(): Promise<void> {
   // Stop immediately so music cannot continue while Firebase signs out.
+  state.guestMode = false;
   onUserSignedOut();
   await signOutUser();
   showLogin();
@@ -2008,6 +2016,8 @@ function wireStatic(): void {
   $("btn-google-signin").addEventListener("click", () => void handleGoogleSignIn());
   $("btn-password-reset").addEventListener("click", () => void handlePasswordReset());
   $("btn-continue-guest").addEventListener("click", () => {
+    state.guestMode = true;
+    updateAccountStatus();
     navigate("home");
     showToast("Choose a mood to create your first mix");
   });
