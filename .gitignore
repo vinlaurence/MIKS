@@ -10,6 +10,18 @@ firebase-debug.*.log*
 # Firebase cache
 .firebase/
 
+# Local environment and credentials; never commit these to GitHub.
+.env*
+!.env.example
+*.pem
+*.key
+*.p12
+firebase-adminsdk-*.json
+*-firebase-adminsdk-*.json
+*service-account*.json
+.secrets/
+.secrets.*
+
 # Firebase config
 
 # Uncomment this if you'd like others to create their own Firebase project.
@@ -66,9 +78,6 @@ src-tauri/gen/android/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
 
 # dataconnect generated files
 .dataconnect
