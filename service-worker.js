@@ -1,4 +1,4 @@
-const CACHE_NAME = "miks-shell-v58";
+const CACHE_NAME = "miks-shell-v59";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -48,13 +48,13 @@ self.addEventListener("fetch", (event) => {
       return response;
     }).catch(async () => {
       const cache = await caches.open(CACHE_NAME);
-      return (await cache.match(event.request)) || (await cache.match("/index.html")) || cache.match("/404.html");
+      return (await cache.match(event.request)) || (await cache.match(url.pathname)) || (await cache.match("/index.html")) || cache.match("/404.html");
     }));
     return;
   }
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(event.request);
+    const cached = (await cache.match(event.request)) || (await cache.match(url.pathname));
     if (cached?.ok) return cached;
     try {
       const response = await fetch(event.request);
