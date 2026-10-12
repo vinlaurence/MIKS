@@ -2143,6 +2143,11 @@ function wireStatic(): void {
     const track = state.queue[state.currentIndex];
     if (track) handleToggleFavorite(track);
   });
+  $("btn-remove-current").addEventListener("click", () => {
+    if (state.currentIndex < 0) return;
+    removeQueueTrack(state.currentIndex);
+    showToast("Removed from queue");
+  });
   $("search-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $<HTMLInputElement>("search-input");

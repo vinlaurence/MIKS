@@ -15,7 +15,7 @@
 <link rel="icon" href="icons/miks-logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="styles.css?v=all-music-mobile-20261012">
+<link rel="stylesheet" href="styles.css?v=mini-player-remove-20261013">
 </head>
 <body>
 
@@ -365,6 +365,7 @@
         <button type="button" class="player-mode" id="btn-next" aria-label="Next track">⏭</button>
         <button class="player-mode" id="btn-repeat" title="Repeat" aria-label="Repeat">↻</button>
         <button class="player-mode queue-open" id="btn-open-queue" title="Open queue" aria-label="Open queue">☷</button>
+        <button type="button" class="player-mode mini-remove" id="btn-remove-current" title="Remove current song from queue" aria-label="Remove current song from queue">×</button>
       </div>
     </div>
     <label class="volume-control" title="Volume">◖ <input type="range" id="volume-control" min="0" max="1" step="0.05" value="1" aria-label="Volume"></label>
@@ -390,6 +391,6 @@
   <audio id="audio-el" preload="none"></audio>
 </div>
 
-<script src="dist/app.js?v=miks-logo-foreground-20261003" type="module"></script>
+<script src="dist/app.js?v=mini-player-remove-20261013" type="module"></script>
 </body>
 </html>

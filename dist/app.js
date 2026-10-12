@@ -2115,6 +2115,12 @@ function wireStatic() {
         if (track)
             handleToggleFavorite(track);
     });
+    $("btn-remove-current").addEventListener("click", () => {
+        if (state.currentIndex < 0)
+            return;
+        removeQueueTrack(state.currentIndex);
+        showToast("Removed from queue");
+    });
     $("search-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const input = $("search-input");
